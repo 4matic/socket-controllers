@@ -32,5 +32,7 @@ export interface SocketControllersOptions {
      * This operation is being executed when parsing user parameters.
      */
     plainToClassTransformOptions?: ClassTransformOptions;
+
+    useAsClient?: boolean;
     
 }

@@ -23,6 +23,8 @@ export class SocketControllerExecutor {
      */
     useClassTransformer: boolean;
 
+    useAsClient: boolean;
+
     /**
      * Global class transformer options passed to class-transformer during classToPlain operation.
      * This operation is being executed when server returns response to user.
@@ -88,7 +90,8 @@ export class SocketControllerExecutor {
         const controllersWithNamespaces = controllers.filter(ctrl => !!ctrl.namespace);
 
         // register controllers without namespaces
-        this.io.on("connection", (socket: any) => this.handleConnection(controllersWithoutNamespaces, socket));
+        const connectionEvent = this.useAsClient ? "connect" : "connection";
+        this.io.on(connectionEvent, (socket: any) => this.handleConnection(controllersWithoutNamespaces, socket));
 
         // register controllers with namespaces
         controllersWithNamespaces.forEach(controller => {
@@ -96,7 +99,7 @@ export class SocketControllerExecutor {
             if (!(namespace instanceof RegExp)) {
                 namespace = pathToRegexp(namespace);
             }
-            this.io.of(namespace).on("connection", (socket: any) => this.handleConnection([controller], socket));
+            this.io.of(namespace).on(connectionEvent, (socket: any) => this.handleConnection([controller], socket));
         });
 
         return this;

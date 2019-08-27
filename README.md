@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.com/typestack/socket-controllers.svg?branch=master)](https://travis-ci.com/typestack/socket-controllers)
 [![npm version](https://badge.fury.io/js/socket-controllers.svg)](https://badge.fury.io/js/socket-controllers)
 
+Fork with changes to be able to use socket.io-client
 Use class-based controllers to handle websocket events. Helps to organize your code using websockets in classes.
 
 ## Installation
