@@ -34,5 +34,7 @@ export interface SocketControllersOptions {
     plainToClassTransformOptions?: ClassTransformOptions;
 
     useAsClient?: boolean;
-    
+
+    serverHost?: string;
+
 }

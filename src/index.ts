@@ -25,6 +25,17 @@ export function createSocketServer(port: number, options?: SocketControllersOpti
 }
 
 /**
+ * Registers all loaded actions for client.
+ */
+export function createSocketClient(host: string, options?: SocketControllersOptions): any {
+    const io = require("socket.io-client");
+    options.useAsClient = true;
+    options.serverHost = host;
+    createExecutor(io, options || {});
+    return io;
+}
+
+/**
  * Registers all loaded actions in your express application.
  */
 function createExecutor(io: any, options: SocketControllersOptions): void {
@@ -53,6 +64,7 @@ function createExecutor(io: any, options: SocketControllersOptions): void {
     executor.classToPlainTransformOptions = options.classToPlainTransformOptions;
     executor.plainToClassTransformOptions = options.plainToClassTransformOptions;
     executor.useAsClient = options.useAsClient;
+    executor.serverHost = options.serverHost;
 
     // run socket controller register and other operations
     executor.execute(controllerClasses, middlewareClasses);

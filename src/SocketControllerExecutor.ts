@@ -24,6 +24,7 @@ export class SocketControllerExecutor {
     useClassTransformer: boolean;
 
     useAsClient: boolean;
+    serverHost: string;
 
     /**
      * Global class transformer options passed to class-transformer during classToPlain operation.
@@ -89,18 +90,35 @@ export class SocketControllerExecutor {
         const controllersWithoutNamespaces = controllers.filter(ctrl => !ctrl.namespace);
         const controllersWithNamespaces = controllers.filter(ctrl => !!ctrl.namespace);
 
-        // register controllers without namespaces
-        const connectionEvent = this.useAsClient ? "connect" : "connection";
-        this.io.on(connectionEvent, (socket: any) => this.handleConnection(controllersWithoutNamespaces, socket));
+        if (this.useAsClient) {
+            const socketWithoutNamespaces = this.io(this.serverHost);
+            socketWithoutNamespaces.on("connect", () => this.handleConnection(controllersWithoutNamespaces, socketWithoutNamespaces));
 
-        // register controllers with namespaces
-        controllersWithNamespaces.forEach(controller => {
-            let namespace: string | RegExp = controller.namespace;
-            if (!(namespace instanceof RegExp)) {
-                namespace = pathToRegexp(namespace);
-            }
-            this.io.of(namespace).on(connectionEvent, (socket: any) => this.handleConnection([controller], socket));
-        });
+            // register controllers with namespaces
+            controllersWithNamespaces.forEach(controller => {
+                let namespace: string | RegExp = controller.namespace;
+                // if (!(namespace instanceof RegExp)) {
+                //     namespace = pathToRegexp(namespace);
+                // }
+                // console.log("NAMESPACE", this.serverHost + namespace);
+                const socketNamespace = this.io(this.serverHost + namespace, {
+                    // path: namespace
+                });
+                socketNamespace.on("connect", () => this.handleConnection([controller], socketNamespace));
+            });
+        } else {
+            // register controllers without namespaces
+            this.io.on("connection", (socket: any) => this.handleConnection(controllersWithoutNamespaces, socket));
+
+            // register controllers with namespaces
+            controllersWithNamespaces.forEach(controller => {
+                let namespace: string | RegExp = controller.namespace;
+                if (!(namespace instanceof RegExp)) {
+                    namespace = pathToRegexp(namespace);
+                }
+                this.io.of(namespace).on("connection", (socket: any) => this.handleConnection([controller], socket));
+            });
+        }
 
         return this;
     }
@@ -122,6 +140,7 @@ export class SocketControllerExecutor {
 
                 } else if (action.type === ActionTypes.MESSAGE) {
                     socket.on(action.name, (data: any) => { // todo get multiple args
+                        console.log("ActionTypes.MESSAGE", data);
                         this.handleAction(action, {socket: socket, data: data})
                             .then(result => this.handleSuccessResult(result, action, socket))
                             .catch(error => this.handleFailResult(error, action, socket));
